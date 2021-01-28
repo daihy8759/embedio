@@ -1,15 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Security;
-using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace EmbedIO.Net.Internal
+﻿namespace EmbedIO.Net.Internal
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Net.Security;
+    using System.Net.Sockets;
+    using System.Security.Authentication;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     internal sealed partial class HttpConnection : IDisposable
     {
         internal const int BufferSize = 8192;
@@ -25,7 +26,7 @@ namespace EmbedIO.Net.Internal
         private ResponseStream? _oStream;
         private bool _contextBound;
         private int _sTimeout = 90000; // 90k ms for first request, 15k ms from then on.
-        private HttpListener? _lastListener;
+        private EmbedIO.Net.HttpListener? _lastListener;
         private InputState _inputState = InputState.RequestLine;
         private LineState _lineState = LineState.None;
         private int _position;
@@ -45,10 +46,9 @@ namespace EmbedIO.Net.Internal
             else
             {
                 var sslStream = new SslStream(new NetworkStream(sock, false), true);
-
                 try
                 {
-                    sslStream.AuthenticateAsServer(cert);
+                    sslStream.AuthenticateAsServer(cert,false, SslProtocols.Tls12,false);
                 }
                 catch
                 {
